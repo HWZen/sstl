@@ -9,7 +9,7 @@
 
 
 
-TEST(init, initWithoutArg){
+TEST(listInit, initWithoutArg){
     using namespace sstd;
     EXPECT_NO_THROW(listInt l);
     EXPECT_NO_THROW(listDouble l);
@@ -18,12 +18,12 @@ TEST(init, initWithoutArg){
     EXPECT_NO_THROW(list<std::vector<int>> l);
 }
 
-TEST(init, initWithInitList){
+TEST(listInit, initWithInitList){
     using namespace sstd;
     EXPECT_NO_THROW(listInt l({1,2,3,4,5}));
 }
 
-TEST(init, copy){
+TEST(listInit, copy){
     using namespace sstd;
     listInt l({1,2,3,4,5});
     listInt l2(l);
@@ -32,7 +32,7 @@ TEST(init, copy){
 }
 
 
-TEST(init, move){
+TEST(listInit, move){
     using namespace sstd;
     listInt l1({1,2,3,4,5});
     listInt l2(std::move(l1));
@@ -221,6 +221,14 @@ TEST(listFunction, operatorMoveEq){
     listInt l2({1});
     l2 = std::move(l1);
     EXPECT_EQ(l2.size(), 5);
+}
+
+TEST(listFunction, clear){
+    using namespace sstd;
+    listInt l({1,2,3,4,5});
+    l.clear();
+    EXPECT_EQ(l.size(), 0);
+    EXPECT_NO_THROW(l.push_back(1));
 }
 
 

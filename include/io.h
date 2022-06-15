@@ -5,6 +5,11 @@
 #ifndef SSTL_IO_H
 #define SSTL_IO_H
 #ifdef _MSC_VER
+#ifdef ENABLE_CLANGD_FIXED
+#ifndef __cpp_concepts
+#define __cpp_concepts
+#endif
+#endif
 #include <corecrt_io.h>
 #endif
 #include "fast_io/include/fast_io.h"

@@ -18,6 +18,7 @@ In general, sstl do not guarantee thread safety.
 
 ## implements
 * sstd::list
+upd* sstd::array
 * sstd::print()
 * sstd::println()
 * sstd::out()
@@ -31,7 +32,6 @@ In general, sstl do not guarantee thread safety.
 * write by c++20
 
 ## implements in future
-* sstd::array
 * sstd::pair
 * sstd::ref_ptr
 * sstd::RefBase

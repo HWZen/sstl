@@ -16,7 +16,6 @@ const size_t MAX_STACK_SIZE = 0x800000;
 const size_t MAX_STACK_SIZE = 0x800000;
 #endif
 
-
 namespace sstd {
     template<typename T, size_t _size> requires (_size > 0)
     class array {
@@ -30,11 +29,10 @@ namespace sstd {
     public:
 
         [[deprecated("array too small, suggest to use std::array to use stack memory")]]
-        constexpr array() requires(_size * sizeof(T) < MAX_STACK_SIZE && _size > 0)  : m_data(new value_type[_size]) {
+        constexpr array() requires(_size * sizeof(T) < MAX_STACK_SIZE)  : m_data(new value_type[_size]) {
         }
 
         constexpr array() : m_data(new value_type[_size]) {
-            static_assert(_size > 0, "array size must be greater than 0");
         }
         constexpr array(const array& other);
 
@@ -69,33 +67,33 @@ namespace sstd {
             constexpr const_iterator& operator=(const_iterator&&) = default;
 
 
-            constexpr const_iterator& operator++() const {
+            constexpr const_iterator& operator++() {
                 m_ptr++;
                 return *this;
             }
 
-            constexpr const_iterator operator++(int) const {
+            constexpr const_iterator operator++(int) {
                 const_iterator tmp = *this;
                 ++*this;
                 return tmp;
             }
 
-            constexpr const_iterator& operator--() const {
+            constexpr const_iterator& operator--() {
                 m_ptr--;
                 return *this;
             }
 
-            constexpr const_iterator operator--(int) const {
+            constexpr const_iterator operator--(int) {
                 const_iterator tmp = *this;
                 --*this;
                 return tmp;
             }
 
-            constexpr const refVal operator*() const {
+            constexpr const value_type &operator*() const {
                 return *m_ptr;
             }
 
-            constexpr const pVal operator->() const {
+            constexpr const value_type *operator->() const {
                 return m_ptr;
             }
 
@@ -182,6 +180,9 @@ namespace sstd {
 
     };
 
+    template<typename T, typename ...U>
+    array(T, U...) -> array<T, 1 + sizeof...(U)>;
+
     template<typename T, size_t _size> requires (_size > 0)
     constexpr array<T, _size>::array(const array &other): array() {
         for(int i{}; i < _size; ++i){
@@ -200,12 +201,11 @@ namespace sstd {
     }
 
     template<typename T, size_t _size> requires (_size > 0)
-    constexpr array<T, _size>::array(std::initializer_list<value_type> il) {
+    constexpr array<T, _size>::array(std::initializer_list<value_type> il) :array() {
         auto size = il.size();
         if (size > _size) {
             throw std::out_of_range("initializer_list size is too large");
         }
-        m_data = new value_type[_size];
         std::move(il.begin(), il.end(), m_data);
     }
 
@@ -220,7 +220,8 @@ namespace sstd {
             return *this;
         }
         delete[] m_data;
-        m_data = new value_type[_size]{other};
+        m_data = new value_type[_size];
+        std::copy(other.m_data, other.m_data + _size, m_data);
         return *this;
     }
 
@@ -229,6 +230,7 @@ namespace sstd {
         swap(other);
         return *this;
     }
+
 }
 
 #endif //MYSTL_ARRAY_H

@@ -250,6 +250,7 @@ TEST(listIterator, move){
     auto it2 = --l.end();
     *--it = 4;
     EXPECT_EQ(it, it2);
+    EXPECT_EQ(*it2, 4);
 }
 
 

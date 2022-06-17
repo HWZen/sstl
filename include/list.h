@@ -254,15 +254,12 @@ private:
         }
         auto newNode = new Node(std::forward<Type>(val));
         auto node = it.it;
-        if(node->next != nullptr)
-            node->next->prev = newNode;
-        newNode->next = node->next;
         newNode->next = node;
         newNode->prev = node->prev;
         if(node->prev != nullptr)
             node->prev->next = newNode;
         node->prev = newNode;
-        if(it == begin())
+        if(node == m_head)
             m_head = newNode;
         ++m_size;
     }

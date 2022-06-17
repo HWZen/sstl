@@ -90,10 +90,6 @@ public:
             return this->it == other.it && this->listObj == other.listObj;
         }
 
-        constexpr bool operator!=(const const_iterator& other) const{
-            return !(*this == other);
-        }
-
         constexpr const refVal operator*() const{
             return it->data.value();
         }

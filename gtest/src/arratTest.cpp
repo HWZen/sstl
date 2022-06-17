@@ -124,6 +124,21 @@ TEST(arrayFunction, operatorMinusMinus) { // operator--\operator--(int)
     EXPECT_EQ(*cit, 4);
 }
 
+TEST(arrayFunction, operatorEqual){ // operator==
+    using namespace sstd;
+    array<int, 1024> a{{1, 2, 3, 4, 5}};
+    auto it = a.begin();
+    auto it2 = a.begin();
+    EXPECT_EQ(it, it2);
+    ++it2;
+    EXPECT_NE(it, it2);
+
+    auto cit = a.cbegin();
+    EXPECT_EQ(cit, a.cbegin());
+    EXPECT_EQ(cit, it);
+    EXPECT_NE(cit, it2);
+}
+
 TEST(arrayFunction, frontAndBack) {
     using namespace sstd;
     array a{1, 2, 3, 4, 5};

@@ -104,6 +104,21 @@ using namespace sstd;
     EXPECT_EQ(*it, 4);
 }
 
+TEST(listFunction, operatorEqual) { // operator==
+    using namespace sstd;
+    listInt l({1,2,3,4,5});
+    auto it = l.begin();
+    auto it2 = it;
+    EXPECT_EQ(it, it2);
+    ++it2;
+    EXPECT_NE(it, it2);
+
+    auto cit = l.cbegin();
+    EXPECT_EQ(cit, l.cbegin());
+    EXPECT_EQ(cit, it);
+    EXPECT_NE(cit, it2);
+}
+
 TEST(listFunction, checkValid) {
     using namespace sstd;
     listInt l({1,2,3,4,5});

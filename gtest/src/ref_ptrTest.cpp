@@ -109,6 +109,10 @@ TEST(ref_ptrFunction, operatorEqual) { // operator==
     ref_ptr<Base> ref4{ref3};
     EXPECT_EQ(ref4, ref3);
     EXPECT_EQ(ref3, ref4);
+
+    ref3 = {new Derived{}};
+    EXPECT_NE(ref3, ref4);
+    EXPECT_NE(ref4, ref3);
 }
 
 TEST(ref_ptrFunction, assignEqual) { // operator=

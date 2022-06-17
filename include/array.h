@@ -9,11 +9,11 @@
 #include "functional.h"
 #include <cstddef>
 #ifdef _WIN32
-const size_t MAX_STACK_SIZE = 0x200000;
+const size_t MAX_STACK_SIZE = 0x100000;
 #elif defined(__linux__)
-const size_t MAX_STACK_SIZE = 0x800000;
+const size_t MAX_STACK_SIZE = 0x400000;
 #elif defined(__APPLE__)
-const size_t MAX_STACK_SIZE = 0x800000;
+const size_t MAX_STACK_SIZE = 0x400000;
 #endif
 
 namespace sstd {
@@ -87,6 +87,10 @@ namespace sstd {
                 const_iterator tmp = *this;
                 --*this;
                 return tmp;
+            }
+
+            constexpr bool operator==(const const_iterator& other) const {
+                return m_ptr == other.m_ptr;
             }
 
             constexpr const value_type &operator*() const {

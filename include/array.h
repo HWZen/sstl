@@ -16,6 +16,8 @@ const size_t MAX_STACK_SIZE = 0x400000;
 const size_t MAX_STACK_SIZE = 0x400000;
 #endif
 
+#include <stdexcept>
+
 namespace sstd {
     template<typename T, size_t _size> requires (_size > 0)
     class array {
@@ -89,6 +91,32 @@ namespace sstd {
                 return tmp;
             }
 
+            constexpr const_iterator operator+(int64_t n) const{
+                return const_iterator(m_ptr + n);
+            }
+
+            constexpr const_iterator operator-(int64_t n) const{
+                return const_iterator(m_ptr - n);
+            }
+
+            constexpr const_iterator& operator+=(int64_t n) {
+                m_ptr += n;
+                return *this;
+            }
+
+            constexpr const_iterator& operator-=(int64_t n) {
+                m_ptr -= n;
+                return *this;
+            }
+
+            constexpr auto operator<=>(const const_iterator& other) const {
+                return m_ptr <=> other.m_ptr;
+            }
+
+            constexpr int64_t operator-(const_iterator other) const{
+                return m_ptr - other.m_ptr;
+            }
+
             constexpr bool operator==(const const_iterator& other) const {
                 return m_ptr == other.m_ptr;
             }
@@ -131,6 +159,32 @@ namespace sstd {
                 iterator tmp = *this;
                 --*this;
                 return tmp;
+            }
+
+            constexpr iterator operator+(int64_t n) const {
+                return iterator(this->m_ptr + n);
+            }
+
+            constexpr int64_t operator+(const iterator& other) const {
+                return static_cast<int64_t>((this->m_ptr + other.m_ptr));
+            }
+
+            constexpr iterator operator-(int64_t n) const {
+                return iterator(this->m_ptr - n);
+            }
+
+            constexpr int64_t operator-(const iterator& other) const {
+                return static_cast<int64_t>((this->m_ptr - other.m_ptr));
+            }
+
+            constexpr iterator& operator+=(int64_t n) {
+                this->m_ptr += n;
+                return *this;
+            }
+
+            constexpr iterator& operator-=(int64_t n) {
+                this->m_ptr -= n;
+                return *this;
             }
 
             constexpr refVal operator*() const {
@@ -189,7 +243,7 @@ namespace sstd {
 
     template<typename T, size_t _size> requires (_size > 0)
     constexpr array<T, _size>::array(const array &other): array() {
-        for(int i{}; i < _size; ++i){
+        for(size_t i{}; i < _size; ++i){
             m_data[i] = other.m_data[i];
         }
     }

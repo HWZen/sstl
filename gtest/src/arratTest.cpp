@@ -222,7 +222,37 @@ TEST(arrayFunction, moveAssignment){
     EXPECT_EQ(a[4], 5);
 }
 
-TEST(comprehensive_test, test1){
+TEST(arrayFunction, operatorPlus){
+    using namespace sstd;
+    array<int, 1024> a{{1, 2, 3, 4, 5}};
+    auto it = a.begin();
+    EXPECT_EQ(it + 1024, a.end());
+    EXPECT_EQ(it + 1024, a.cend());
+}
+
+TEST(arrayFunction, operatorMinus){
+    using namespace sstd;
+    array<int, 1024> a{{1, 2, 3, 4, 5}};
+    auto it = a.end();
+    EXPECT_EQ(it - 1024, a.begin());
+    EXPECT_EQ(it - 1024, a.cbegin());
+}
+
+TEST(arraryFunction, operatorPlusEqual){
+    using namespace sstd;
+    array<int, 1024> a{{1, 2, 3, 4, 5}};
+    auto it = a.begin();
+    EXPECT_EQ(it += 1024, a.end());
+}
+
+TEST(arrayFunction, operatorMinusEqual){
+    using namespace sstd;
+    array<int, 1024> a{{1, 2, 3, 4, 5}};
+    auto it = a.end();
+    EXPECT_EQ(it -= 1024, a.begin());
+}
+
+TEST(arrayComprehensive_test, test1){
     using namespace sstd;
     array<int, 1024> a{{1, 2, 3, 4, 5}};
     EXPECT_EQ(a.size(), 1024);

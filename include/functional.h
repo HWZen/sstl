@@ -23,6 +23,9 @@
 template<typename T1, typename T2>
 concept  same_or_subclass = std::is_base_of<std::remove_cvref_t<T2>, std::remove_cvref_t<T1>>::value;
 
+template<typename T1, typename T2>
+concept weak_same_type = std::is_same_v<std::remove_cvref_t<T2>, std::remove_cvref_t<T1>>;
+
 template<typename Ty>
 concept sortable = requires(Ty t) {
     *t;

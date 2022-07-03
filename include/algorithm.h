@@ -14,6 +14,7 @@
 #include <queue>
 #include <atomic>
 #include "pair.h"
+#include "atomic_queue.h"
 
 namespace sstd{
     template<sortable Ty>
@@ -59,6 +60,30 @@ namespace sstd{
     template<sortable Ty>
     void parallel_qsort(Ty first, Ty last, auto &&comp){
 
+        class parallel_qsort_thread_poll{
+            std::thread *m_ths;
+            std::counting_semaphore<std::__semaphore_impl::_S_max> m_taskCnt;
+            std::queue<std::function<void()>> m_taskQueue;
+            std::atomic_bool m_stopSignal{false};
+        public:
+            parallel_qsort_thread_poll() {
+                m_ths = new std::thread[std::thread::hardware_concurrency()];
+                for (size_t i{}; i < std::thread::hardware_concurrency(); ++i) {
+                    m_ths[i] = std::thread([&] {
+                        while (!m_stopSignal) {
+                            if (m_taskCnt.template try_acquire_for(std::chrono::milliseconds(1))) {
+
+                            }
+
+                        }
+
+                    });
+                }
+            }
+
+
+        };
+
         // Max thread nums
         std::counting_semaphore thread_count(std::thread::hardware_concurrency());
 
@@ -73,11 +98,11 @@ namespace sstd{
             }
 
             // if range is small, use traditional qsort
-            if(last - first < 50000){
-                sstd::qsort(first, last, comp);
-                callback();
-                return;
-            }
+//            if(last - first < 50000){
+//                sstd::qsort(first, last, comp);
+//                callback();
+//                return;
+//            }
 
             // acquire a thread to avoid too many threads created
             thread_count.acquire();
@@ -96,34 +121,25 @@ namespace sstd{
             }
             *f = t;
 
-            auto states1 = new std::binary_semaphore{0};
-            auto states2 = new std::binary_semaphore{0};
+            auto state = new std::binary_semaphore{0};
             if(first < f){
-
-                std::thread{core, first, f, [=, &thread_count]() {// set callback: when finished, release thread_count, and if other state is finished, means this core's work is down. invoke callback captured in this core.
-                    states1->release();
-                    if (states2->try_acquire()) {
-                        delete states1;
-                        delete states2;
-                        callback();
-                    }
+                std::thread{core, first, f, [=]() {// set callback: when finished, release thread_count, and if other state is finished, means this core's work is down. invoke callback captured in this core.
+                    state->release();
                 }}.detach();
             }
             else
-                states1->release();
+                state->release();
 
+            std::function foo = [=]{
+                state->acquire();
+                delete state;
+                callback();
+            };
             if(last > l){
-                std::thread{core, l + 1, last, [=, &thread_count](){// set callback as above
-                    states2->release();
-                    if(states1->try_acquire()){
-                        delete states1;
-                        delete states2;
-                        callback();
-                    }
-                }}.detach();
+                std::thread{core, l + 1, last, foo}.detach();
             }
             else
-                states2->release();
+                std::thread(foo).detach();
 
             thread_count.release();
         };

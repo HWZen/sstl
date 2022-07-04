@@ -61,51 +61,79 @@ namespace sstd{
     void parallel_qsort(Ty first, Ty last, auto &&comp){
 
         class parallel_qsort_thread_poll{
-            std::thread *m_ths;
-            std::counting_semaphore<std::__semaphore_impl::_S_max> m_taskCnt;
-            std::queue<std::function<void()>> m_taskQueue;
-            std::atomic_bool m_stopSignal{false};
         public:
-            parallel_qsort_thread_poll() {
-                m_ths = new std::thread[std::thread::hardware_concurrency()];
-                for (size_t i{}; i < std::thread::hardware_concurrency(); ++i) {
+            size_t m_threadNums;
+            std::thread *m_ths;
+            std::queue<std::function<void()>> m_taskQueue;
+            std::mutex m_taskQueueLock;
+            std::atomic_bool m_stopSignal{false};
+            parallel_qsort_thread_poll(size_t threadNums) : m_threadNums(threadNums) {
+                m_ths = new std::thread[m_threadNums];
+                for (size_t i{}; i < m_threadNums; ++i) {
                     m_ths[i] = std::thread([&] {
                         while (!m_stopSignal) {
-                            if (m_taskCnt.template try_acquire_for(std::chrono::milliseconds(1))) {
-
+                            if(m_taskQueueLock.try_lock()){
+                                if(!m_taskQueue.empty()){
+                                    auto task = m_taskQueue.front();
+                                    m_taskQueue.pop();
+                                    m_taskQueueLock.unlock();
+                                    task();
+                                }
+                                else{
+                                    m_taskQueueLock.unlock();
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                                }
                             }
-
+                            else{
+                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                            }
                         }
-
                     });
                 }
             }
 
+            void stop(){
+                for(size_t i{}; i < m_threadNums; ++i){
+                    if(m_ths[i].joinable())
+                        m_ths[i].join();
+                }
+            }
 
+            ~parallel_qsort_thread_poll(){
+                stop();
+                delete[] m_ths;
+            }
         };
 
+        std::atomic_size_t cnt{0};
+
         // Max thread nums
-        std::counting_semaphore thread_count(std::thread::hardware_concurrency());
+//        std::counting_semaphore thread_count(std::thread::hardware_concurrency());
+
+        parallel_qsort_thread_poll threadPoll(std::thread::hardware_concurrency());
+
 
         // callback: when function finished, invoke callback
-        std::function<void(Ty,Ty, std::function<void()>)> core = [&](Ty first, Ty last, std::function<void()> callback){
+        std::function<void(Ty,Ty)> core = [&](Ty first, Ty last){
             if(last < first)
                 throw std::runtime_error("parallel_qsort: first > last");
 
             if(last - first <= 1){
-                callback();
+                if(last - first == 1)
+                ++cnt;
                 return;
             }
 
+
             // if range is small, use traditional qsort
-//            if(last - first < 50000){
-//                sstd::qsort(first, last, comp);
-//                callback();
-//                return;
-//            }
+            if(last - first < 10000){
+                sstd::qsort(first, last, comp);
+                cnt += last - first;
+                return;
+            }
 
             // acquire a thread to avoid too many threads created
-            thread_count.acquire();
+//            thread_count.acquire();
 
             auto t = *first;
             auto f = first;
@@ -121,35 +149,40 @@ namespace sstd{
             }
             *f = t;
 
-            auto state = new std::binary_semaphore{0};
+            ++cnt;
+
             if(first < f){
-                std::thread{core, first, f, [=]() {// set callback: when finished, release thread_count, and if other state is finished, means this core's work is down. invoke callback captured in this core.
-                    state->release();
-                }}.detach();
+                threadPoll.m_taskQueueLock.lock();
+                threadPoll.m_taskQueue.push([=](){
+                    core(first, f);
+                });
+                threadPoll.m_taskQueueLock.unlock();
+//                std::thread{core, first, f, [=]() {// set callback: when finished, release thread_count, and if other state is finished, means this core's work is down. invoke callback captured in this core.
+//                    state->release();
+//                }}.detach();
             }
-            else
-                state->release();
 
-            std::function foo = [=]{
-                state->acquire();
-                delete state;
-                callback();
-            };
+
             if(last > l){
-                std::thread{core, l + 1, last, foo}.detach();
+                threadPoll.m_taskQueueLock.lock();
+                threadPoll.m_taskQueue.push([=](){
+                    core(l + 1, last);
+                });
+                threadPoll.m_taskQueueLock.unlock();
             }
-            else
-                std::thread(foo).detach();
 
-            thread_count.release();
+//            thread_count.release();
         };
 
-        std::binary_semaphore state{0};
-        core(first, last, [&](){
-            state.release();
-        });
-        state.acquire();
 
+        threadPoll.m_taskQueueLock.lock();
+        threadPoll.m_taskQueue.push([&](){
+            core(first, last);
+        });
+        threadPoll.m_taskQueueLock.unlock();
+        while (cnt < last - first)
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        threadPoll.m_stopSignal = true;
     }
 #elif Type == 2
     template<sortable Ty>

@@ -28,4 +28,8 @@ if(ENABLE_SAMPLE)
     add_subdirectory(sample)
 endif()
 
+option(ENABLE_BENCHMARK "Enable Benchmark" OFF)
+if(ENABLE_BENCHMARK)
+    add_subdirectory(benchmark)
+endif()
 

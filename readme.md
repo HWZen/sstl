@@ -9,12 +9,14 @@ sstl chases small, simple and performance, So if you want multithreading support
 look for other libraries.<br>
 In general, sstl do not guarantee thread safety.
 
-
 ## Requirements
 * c++ compiler which supports [c++20](https://en.cppreference.com/w/cpp/20)
-* if you want to build googletest and samples, you need:
+* if you want to build googletest and examples, you need:
 * - googletest
 * - cmake
+
+## Usage
+* sstl is a header-only lib, add [include](include) dir to your ```include_directories``` that you can use it.
 
 ## implements
 * sstd::list
@@ -28,6 +30,8 @@ In general, sstl do not guarantee thread safety.
 * sstd::print()
 * sstd::println()
 * sstd::out()
+
+> IO lib ([io.h](include/io.h)) use [fast_io](https://gitee.com/qabeowjbtkwb/fast_io)
 
 ## features
 * header-only

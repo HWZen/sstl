@@ -17,35 +17,36 @@
 #include "atomic_queue.h"
 
 namespace sstd{
+
     template<sortable Ty>
-    void qsort(Ty first, Ty last, auto &&comp ){
+    void qsort(Ty first, Ty last, auto &&cmp ){
 
         if(first >= last)
             return;
-        auto t = *first;
-        auto f = first;
-        auto l = last - 1;
+        auto mid = *first;
+        auto left = first;
+        auto right = last - 1;
 
-        while(f < l){
-            while(f < l && !comp(*l, t))
-                --l;
-            *f = *l;
-            while(f < l && comp(*f, t))
-                ++f;
-            *l = *f;
+        while(left < right){
+            while(left < right && !cmp(*right, mid))
+                --right;
+            *left = *right;
+            while(left < right && cmp(*left, mid))
+                ++left;
+            *right = *left;
         }
-        *f = t;
+        *left = mid;
 
-        if(first < f)
-            qsort(first, f, comp);
-        if(last > l)
-            qsort(l + 1, last, comp);
+        if(first < left)
+            qsort(first, left, cmp);
+        if(last > right)
+            qsort(right + 1, last, cmp);
     }
 
     template<sortable Ty>
     void qsort(Ty first, Ty last){
-        qsort(first, last, [](auto &&a, auto &&b){
-            return a < b;
+        qsort(first, last, [](auto &&left, auto &&right){
+            return left < right;
         });
     }
 
@@ -53,10 +54,6 @@ namespace sstd{
         qsort(ty.begin(), ty.end());
     }
 
-#define Type 1
-
-
-#if Type == 1
     template<sortable Ty>
 #if _MSC_VER
     [[deprecated("parallel_qsort has performance issue in MSVC")]]
@@ -64,26 +61,29 @@ namespace sstd{
     void parallel_qsort(Ty first, Ty last, auto &&comp){
 
         class parallel_qsort_thread_poll{
-            std::atomic_size_t m_aszTaskCnt{ 0 };
-        public:
-            size_t m_threadNums;
+        private:
             std::thread *m_ths;
-            sstd::atomic_queue<sstd::pair<Ty, Ty>> m_taskQueue;
+            size_t m_threadNums;
             std::function<void(Ty,Ty)> m_task;
+
+        public:
+
+            sstd::atomic_queue<sstd::pair<Ty, Ty>> m_taskQueue;
+
             std::atomic_bool m_stopSignal{false};
+
             explicit parallel_qsort_thread_poll(size_t threadNums) : m_threadNums(threadNums) {
+                auto loopTask = [&] {
+                    while (!m_stopSignal) {
+                        auto args = m_taskQueue.try_pop_for(std::chrono::milliseconds(1));
+                        if (args.has_value())
+                            m_task(args->first, args->second);
+                    }
+                };
+
                 m_ths = new std::thread[m_threadNums];
-                for (size_t i{}; i < m_threadNums; ++i) {
-                    m_ths[i] = std::thread([&] {
-                        while (!m_stopSignal) {
-                            auto args = m_taskQueue.try_pop_for(std::chrono::milliseconds(1));
-                            if (args.has_value()) {
-                                ++m_aszTaskCnt;
-                                m_task(args->first, args->second);
-                            }
-                        }
-                    });
-                }
+                for (size_t i{}; i < m_threadNums; ++i)
+                    m_ths[i] = std::thread(loopTask);
             }
 
             void stop(){
@@ -93,22 +93,19 @@ namespace sstd{
                 }
             }
 
+            constexpr void setTask(std::function<void(Ty, Ty)> task){
+                m_task = std::move(task);
+            }
+
             ~parallel_qsort_thread_poll(){
                 stop();
                 delete[] m_ths;
             }
         };
 
-        std::counting_semaphore cnt{0};
-
-        // Max thread nums
-//        std::counting_semaphore thread_count(std::thread::hardware_concurrency());
-
         parallel_qsort_thread_poll threadPoll(std::thread::hardware_concurrency());
 
-
-
-        // callback: when function finished, invoke callback
+        std::counting_semaphore cnt{0};
         std::function<void(Ty,Ty)> core = [&](Ty first, Ty last){
             if(last < first)
                 throw std::runtime_error("parallel_qsort: first > last");
@@ -123,114 +120,48 @@ namespace sstd{
             // if range is small, use traditional qsort
             if(last - first < 50000){
                 sstd::qsort(first, last, comp);
-                for(size_t i{};i<last - first;++i)
+                for(size_t i{}; i < last - first; ++i)
                     cnt.release();
                 return;
             }
 
-            // acquire a thread to avoid too many threads created
-//            thread_count.acquire();
+            auto mid = *first;
+            auto left = first;
+            auto right = last - 1;
 
-            auto t = *first;
-            auto f = first;
-            auto l = last - 1;
-
-            while(f < l){
-                while(f < l && !comp(*l, t))
-                    --l;
-                *f = *l;
-                while(f < l && comp(*f, t))
-                    ++f;
-                *l = *f;
+            while(left < right){
+                while(left < right && !comp(*right, mid))
+                    --right;
+                *left = *right;
+                while(left < right && comp(*left, mid))
+                    ++left;
+                *right = *left;
             }
-            *f = t;
+            *left = mid;
 
             cnt.release();
 
-            if(first < f){
-                threadPoll.m_taskQueue.push(sstd::pair{first,f});
-//                std::thread{core, first, f, [=]() {// set callback: when finished, release thread_count, and if other state is finished, means this core's work is down. invoke callback captured in this core.
-//                    state->release();
-//                }}.detach();
-            }
+            if(first < left)
+                threadPoll.m_taskQueue.push(sstd::pair{first, left});
 
+            if(last > right)
+                threadPoll.m_taskQueue.push(sstd::pair{right + 1, last});
 
-            if(last > l){
-                threadPoll.m_taskQueue.push(sstd::pair{l+1,last});
-            }
-
-//            thread_count.release();
         };
 
-        threadPoll.m_task = core;
+        threadPoll.setTask(core);
 
         threadPoll.m_taskQueue.push(sstd::pair{first, last});
         for(size_t i{};i<last - first;++i)
             cnt.acquire();
         threadPoll.m_stopSignal = true;
     }
-#elif Type == 2
-    template<sortable Ty>
-    void parallel_qsort(Ty first, Ty last, auto &&comp){
 
-        std::counting_semaphore thread_count(std::thread::hardware_concurrency());
-
-        std::function<void(Ty, Ty)> core = [&comp, &core, &thread_count](Ty _first, Ty _last) {
-
-            auto _sort = [&comp](auto &&t, auto &&f, auto &&l){
-                while (f < l) {
-                    while (f < l && !comp(*l, t))
-                        --l;
-                    *f = *l;
-                    while (f < l && comp(*f, t))
-                        ++f;
-                    *l = *f;
-                }
-                *f = t;
-                return true;
-            };
-
-            while(true){
-                if (_last - _first <= 1)
-                    return;
-
-                auto t = *_first;
-                auto f = _first;
-                auto l = _last - 1;
-                if(!_sort(t,f,l))
-                    return;
-
-                std::thread th[2];
-                if(thread_count.try_acquire())
-                    th[0] = std::thread(core, _first, f);
-                else
-                    core(_first, f);
-
-                if((thread_count.try_acquire()))
-                    th[1] = std::thread(core, f + 1, _last);
-                else
-                    core(f + 1, _last);
-
-                if(th[0].joinable()){
-                    th[0].join();
-                    thread_count.release();
-                }
-                if(th[1].joinable()){
-                    th[1].join();
-                    thread_count.release();
-                }
-            }
-
-
-        };
-        core(first, last);
-    }
-#endif // Type
 
     template<sortable Ty>
     void parallel_qsort(Ty first, Ty last){
-        parallel_qsort(first, last, [](auto &&a, auto &&b) {
-            return a < b;
+        parallel_qsort(first, last, [](auto &&left, auto &&right) {
+            return left < right;
         });
     }
 

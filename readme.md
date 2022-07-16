@@ -31,7 +31,7 @@ In general, sstl do not guarantee thread safety.
 * sstd::println()
 * sstd::out()
 
-> IO lib ([io.h](include/io.h)) use [fast_io](https://gitee.com/qabeowjbtkwb/fast_io)
+> IO lib ([io.h](include/io.h)) power by [fast_io](https://gitee.com/qabeowjbtkwb/fast_io)
 
 ## features
 * header-only

@@ -23,9 +23,9 @@ if(ENABLE_GTEST)
     add_subdirectory(gtest)
 endif()
 
-option(ENABLE_SAMPLE "Enable Sample" OFF)
+option(ENABLE_EXAMPLE "Enable Sample" OFF)
 if(ENABLE_SAMPLE)
-    add_subdirectory(sample)
+    add_subdirectory(example)
 endif()
 
 option(ENABLE_BENCHMARK "Enable Benchmark" OFF)

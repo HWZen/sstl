@@ -20,16 +20,19 @@ endif()
 
 option(ENABLE_GTEST "Enable GTest" OFF)
 if(ENABLE_GTEST)
+    message(STATUS "build gtest")
     add_subdirectory(gtest)
 endif()
 
-option(ENABLE_SAMPLE "Enable Sample" OFF)
-if(ENABLE_SAMPLE)
-    add_subdirectory(sample)
+option(ENABLE_EXAMPLE "Enable Example" OFF)
+if(ENABLE_EXAMPLE)
+    message(STATUS "build example")
+    add_subdirectory(example)
 endif()
 
 option(ENABLE_BENCHMARK "Enable Benchmark" OFF)
 if(ENABLE_BENCHMARK)
+    message(STATUS "build benchmark")
     add_subdirectory(benchmark)
 endif()
 

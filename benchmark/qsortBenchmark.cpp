@@ -11,7 +11,7 @@
 
 #include <vector>
 
-const size_t array_size = 8000000;
+const size_t array_size = 200000000;
 
 int main()
 {
@@ -51,7 +51,7 @@ int main()
         if(v[i] != a[i])
         {
             sstd::Println("error");
-            return 0;
+            break;
         }
     sstd::Println("check time: ", sstd::get_time() - t0);
 
@@ -61,14 +61,12 @@ int main()
         if(v2[i] != a2[i])
         {
             sstd::Println("error");
-            return 0;
+            break;
         }
 
-    t0 = sstd::get_time();
-    sstd::parallel_qsort(v2);
-    sstd::Println("sstd::parallel_qsort(vector) time: ", sstd::get_time() - t0);
-
-
+    //t0 = sstd::get_time();
+    //sstd::parallel_qsort(v2);
+    //sstd::Println("sstd::parallel_qsort(vector) time: ", sstd::get_time() - t0);
 
 }
 

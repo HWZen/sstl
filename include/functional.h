@@ -42,12 +42,7 @@ concept is_vector_like = requires(Ty t) {
     t.begin();
     t.end();
     *t.begin();
-    t.begin()++;
-    t.end()--;
-    --t.end();
-    ++t.begin();
-    t.begin() < t.end();
-    t.end() > t.begin();
+
 };
 
 

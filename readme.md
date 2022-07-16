@@ -22,6 +22,9 @@ In general, sstl do not guarantee thread safety.
 * sstd::pair
 * sstd::ref_ptr
 * sstd::RefBase
+* sstd::atomic_queue
+* sstd::qsort()
+* sstd::parallel_qsort()
 * sstd::print()
 * sstd::println()
 * sstd::out()
@@ -35,8 +38,7 @@ In general, sstl do not guarantee thread safety.
 * write by c++20
 
 ## implements in future
-* sstd::qsort()
-* sstd::parallel_qsort()
+
 
 ## platforms passed by gtest
 * Linux (ubuntu 20.04 for wsl) with gcc 13.0.0

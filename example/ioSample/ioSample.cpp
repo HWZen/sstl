@@ -4,7 +4,7 @@
 // MIT License
 //
 
-#include <io.h>
+#include <sstdio.h>
 
 int main(){
     using namespace sstd;

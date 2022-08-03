@@ -5,7 +5,7 @@
 //
 
 #include "ref_ptr.h"
-#include "io.h"
+#include "sstdio.h"
 #include <string>
 
 class Base {

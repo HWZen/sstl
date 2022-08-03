@@ -5,7 +5,7 @@
 //
 
 #include "RefBase.h"
-#include "io.h"
+#include "sstdio.h"
 
 class Integer : private sstd::RefBase {
 private:

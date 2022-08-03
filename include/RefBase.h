@@ -30,6 +30,7 @@ namespace sstd {
                 return *this;
             m_refCount = other.m_refCount;
             incCount();
+            return *this;
         }
 
         RefBase& operator=(RefBase&& other) noexcept{

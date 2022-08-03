@@ -2,8 +2,6 @@ project(sstl_gtest)
 
 find_package(GTest REQUIRED)
 
-include_directories(${GTest_INCLUDE_DIRS})
-
 file(GLOB_RECURSE src_files "src/*.cpp")
 
 add_executable(sstl_gtest ${src_files})

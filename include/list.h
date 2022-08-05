@@ -13,7 +13,7 @@
 namespace sstd{
 
 template <typename Ty1, typename Ty2>
-concept ValueType = std::is_same_v<std::remove_cvref_t<Ty1> , std::remove_cvref_t<Ty2>>;
+concept ValueType = std::is_convertible_v<std::remove_cvref_t<Ty1> , std::remove_cvref_t<Ty2>>;
 
 template <typename T>
 class list{

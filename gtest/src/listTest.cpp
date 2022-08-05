@@ -185,6 +185,11 @@ TEST(listFunction, push){
     it = ++l.begin();
     l.push(4, it);
     EXPECT_EQ(*++l.begin(), 4);
+
+    list<int64_t> l2;
+    l2.push_back(114514.221);
+    EXPECT_EQ(l2.front(), (int64_t)114514);
+
 }
 
 TEST(listFunction, pop){

@@ -8,7 +8,7 @@
 #define SSTL_REF_PTR_H
 #include <type_traits>
 #include <cstddef>
-#include <functional.h>
+#include "functional.h"
 
 namespace sstd {
 

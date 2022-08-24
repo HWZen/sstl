@@ -146,6 +146,49 @@ namespace sstd{
         using ReturnType = void;
     };
 
+    class BaseThread
+    {
+    public:
+        /**
+         * @brief detach thread is joinablenable
+         * @return true if thread is joinable
+         */
+        virtual constexpr bool joinable() noexcept = 0;
+
+        /**
+         * @brief join thread
+         * @return true if thread is joinable
+         */
+        virtual constexpr bool join() noexcept = 0;
+
+        /**
+         * @brief detach thread
+         * @return true if thread is joinable
+         */
+        virtual constexpr bool detach() noexcept = 0;
+
+        /**
+         * @brief terminate the thread
+         * @return true if thread is running
+         */
+        virtual constexpr bool terminate() ONLY_WIN_NO_EXCEPT = 0;
+
+        /**
+         * @brief get the thread status
+         * @return thread status
+         */
+        virtual constexpr threadStatus getStatus() const noexcept = 0;
+
+        /**
+         * @brief get the thread fd
+         * @return thread fd
+         */
+        virtual threadFd getRawFd() noexcept = 0;
+
+        virtual ~BaseThread() = default;
+    };
+
+
 
     /**
      * @brief thread support
@@ -156,7 +199,7 @@ namespace sstd{
     template<size_t stackSize = g_stackSize, typename Fn = void(*)(), typename... Args>
         requires(std::invocable<Fn, Args...>) &&
         (std::is_void_v<std::invoke_result_t<Fn, Args...>> || std::is_nothrow_move_constructible_v<std::invoke_result_t<Fn, Args...>>)
-    class thread
+    class thread : public BaseThread
     {
     public:
 
@@ -179,7 +222,7 @@ namespace sstd{
             return *this;
         }
 
-        ~thread();
+        ~thread() override;
 
         constexpr thread(Fn &&fn, Args &&...args) noexcept;
 
@@ -187,31 +230,31 @@ namespace sstd{
          * @brief detach thread is joinablenable
          * @return true if thread is joinable
          */
-        constexpr bool joinable() noexcept;
+        constexpr bool joinable() noexcept override;
 
         /**
          * @brief join thread
          * @return true if thread is joinable
          */
-        constexpr bool join() noexcept;
+        constexpr bool join() noexcept override;
 
         /**
          * @brief detach thread
          * @return true if thread is joinable
          */
-        constexpr bool detach() noexcept;
+        constexpr bool detach() noexcept override;
 
         /**
          * @brief terminate the thread
          * @return true if thread is running
          */
-        constexpr bool terminate() ONLY_WIN_NO_EXCEPT;
+        constexpr bool terminate() ONLY_WIN_NO_EXCEPT override;
 
         /**
          * @brief get the thread status
          * @return thread status
          */
-        constexpr threadStatus getStatus() const noexcept;
+        constexpr threadStatus getStatus() const noexcept override;
 
         /**
          * @brief get the thread run result
@@ -229,14 +272,14 @@ namespace sstd{
          * @brief get the thread fd
          * @return thread fd
          */
-        threadFd getRawFd() noexcept;
+        threadFd getRawFd() noexcept override;
 
     protected:
         constexpr void startThread(Fn &&fn, Args &&...args) noexcept;
 
         ref_ptr<Val<ReturnType>> m_runResult{};
 
-        threadStatus m_status = threadStatus::UNSTART;
+        threadStatus m_status{threadStatus::UNSTART};
 
         threadFd m_threadFd{nullThreadFd};
 
@@ -561,8 +604,8 @@ namespace sstd{
     requires(std::invocable<Fn, Args...>) &&
     (std::is_void_v<std::invoke_result_t<Fn, Args...>> || std::is_nothrow_move_constructible_v<std::invoke_result_t<Fn, Args...>>)
     thread<stackSize, Fn, Args ...>::~thread() {
-        if(joinable())
-            join();
+        if(thread::joinable()) [[likely]]
+            thread::join();
     }
 
     template<typename Fn, typename... Args>

@@ -9,7 +9,7 @@
 
 #include <functional.h>
 #include <semaphore>
-#include <thread>
+#include "thread.h"
 #include <functional>
 #include <queue>
 #include <atomic>
@@ -62,7 +62,7 @@ namespace sstd{
 
         class parallel_qsort_thread_poll{
         private:
-            std::thread *m_ths;
+            sstd::BaseThread **m_ths;
             size_t m_threadNums;
             std::function<void(Ty,Ty)> m_task;
 
@@ -81,15 +81,17 @@ namespace sstd{
                     }
                 };
 
-                m_ths = new std::thread[m_threadNums];
-                for (size_t i{}; i < m_threadNums; ++i)
-                    m_ths[i] = std::thread(loopTask);
+                using ThreadType = decltype(sstd::thread(std::move(loopTask)));
+                m_ths = new BaseThread*[m_threadNums];
+                for (size_t i = 0; i < m_threadNums; ++i) {
+                    m_ths[i] = new ThreadType(std::move(loopTask));
+                }
             }
 
             void stop(){
                 for(size_t i{}; i < m_threadNums; ++i){
-                    if(m_ths[i].joinable())
-                        m_ths[i].join();
+                    if(m_ths[i]->joinable())
+                        m_ths[i]->join();
                 }
             }
 
@@ -99,11 +101,13 @@ namespace sstd{
 
             ~parallel_qsort_thread_poll(){
                 stop();
+                for(size_t i{}; i < m_threadNums; ++i)
+                    delete m_ths[i];
                 delete[] m_ths;
             }
         };
 
-        parallel_qsort_thread_poll threadPoll(std::thread::hardware_concurrency());
+        parallel_qsort_thread_poll threadPoll(sstd::getCpuNums());
 
         std::counting_semaphore cnt{0};
         std::function<void(Ty,Ty)> core = [&](Ty first, Ty last){
@@ -152,7 +156,7 @@ namespace sstd{
         threadPoll.setTask(core);
 
         threadPoll.m_taskQueue.push(sstd::pair{first, last});
-        for(size_t i{};i<last - first;++i)
+        for(size_t i{}; i < last - first; ++i)
             cnt.acquire();
         threadPoll.m_stopSignal = true;
     }

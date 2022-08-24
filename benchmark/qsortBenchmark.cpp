@@ -11,7 +11,7 @@
 
 #include <vector>
 
-const size_t array_size = 200000000;
+const size_t array_size = 100000000;
 
 int main()
 {

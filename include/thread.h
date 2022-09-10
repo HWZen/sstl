@@ -469,7 +469,8 @@ namespace sstd{
                     m_status = threadStatus::EXCEPTED;
                 }
                 catch (...) {
-                    m_status = threadStatus::EXCEPTED;
+                    if(m_status != threadStatus::DESTROYED)
+                        m_status = threadStatus::EXCEPTED;
                     throw;
                 }
             }
@@ -490,7 +491,8 @@ namespace sstd{
                     m_status = threadStatus::EXCEPTED;
                 }
                 catch (...) {
-                    m_status = threadStatus::EXCEPTED;
+                    if(m_status != threadStatus::DESTROYED)
+                        m_status = threadStatus::EXCEPTED;
                     throw;
                 }
             }
@@ -555,7 +557,7 @@ namespace sstd{
         if(!joinable() || m_status != threadStatus::RUNNING) [[unlikely]]
             return false;
         sstd::terminate(m_threadFd);
-        m_status = threadStatus::FINISHED;
+        m_status = threadStatus::DESTROYED;
         m_threadFd = nullThreadFd;
         return true;
     }

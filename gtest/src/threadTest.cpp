@@ -58,6 +58,7 @@ TEST(threadCStyleTest, detach)
     sstd::detach(fd);
 }
 
+#ifndef DISABLE_THREAD_TERMINATION_TEST
 TEST(threadCStyleTest, terminate)
 {
 
@@ -75,6 +76,7 @@ TEST(threadCStyleTest, terminate)
     sstd::ThisThread::sleep(50);
     EXPECT_EQ(sign, 1);
 }
+#endif // DISABLE_THREAD_TERMINATION_TEST
 
 TEST(threadCStyleTest, getCpuNums)
 {
@@ -150,6 +152,7 @@ TEST(threadClassTest, detach)
     sstd::ThisThread::sleep(5);
 }
 
+#ifndef DISABLE_THREAD_TERMINATION_TEST
 TEST(threadClassTest, terminate)
 {
     int sign{0};
@@ -166,6 +169,7 @@ TEST(threadClassTest, terminate)
     sstd::ThisThread::sleep(50);
     EXPECT_EQ(sign, 1);
 }
+#endif // DISABLE_THREAD_TERMINATION_TEST
 
 TEST(threadClassTest, status)
 {
@@ -207,10 +211,12 @@ TEST(threadClassTest, getThreadFd)
     });
     auto fd = th1.getRawFd();
     EXPECT_FALSE(sstd::isNullFd(fd));
+#ifndef DISABLE_THREAD_TERMINATION_TEST
     sstd::ThisThread::sleep(5);
     sstd::terminate(fd);
     sstd::ThisThread::sleep(50);
     EXPECT_EQ(sign, 1);
+#endif // DISABLE_THREAD_TERMINATION_TEST
 }
 
 TEST(threadClassTest, getResult)

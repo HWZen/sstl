@@ -224,7 +224,7 @@ namespace sstd{
 
         ~thread() override;
 
-        constexpr thread(Fn &&fn, Args &&...args) noexcept;
+        constexpr thread(Fn fn, Args &&...args) noexcept;
 
         /**
          * @brief detach thread is joinablenable
@@ -275,7 +275,7 @@ namespace sstd{
         threadFd getRawFd() noexcept override;
 
     protected:
-        constexpr void startThread(Fn &&fn, Args &&...args) noexcept;
+        constexpr void startThread(Fn fn, Args &&...args) noexcept;
 
         ref_ptr<Val<ReturnType>> m_runResult{};
 
@@ -503,7 +503,7 @@ namespace sstd{
     template<size_t stackSize, typename Fn, typename... Args>
     requires(std::invocable<Fn, Args...>) &&
     (std::is_void_v<std::invoke_result_t<Fn, Args...>> || std::is_nothrow_move_constructible_v<std::invoke_result_t<Fn, Args...>>)
-    constexpr thread<stackSize, Fn, Args ...>::thread(Fn&& fn, Args&& ...args) noexcept
+    constexpr thread<stackSize, Fn, Args ...>::thread(Fn fn, Args&& ...args) noexcept
     {
         startThread(std::forward<Fn>(fn), std::forward<Args>(args)...);
     }
@@ -511,7 +511,7 @@ namespace sstd{
     template<size_t stackSize, typename Fn, typename... Args>
     requires(std::invocable<Fn, Args...>) &&
     (std::is_void_v<std::invoke_result_t<Fn, Args...>> || std::is_nothrow_move_constructible_v<std::invoke_result_t<Fn, Args...>>)
-    constexpr void thread<stackSize, Fn, Args ...>::startThread(Fn&& fn, Args&& ... args) noexcept
+    constexpr void thread<stackSize, Fn, Args ...>::startThread(Fn fn, Args&& ... args) noexcept
     {
         m_threadFd = createNativeFd(stackSize, &thread::funcInvokeInThread, this, std::forward<Fn>(fn), std::forward<Args>(args)...);
     }

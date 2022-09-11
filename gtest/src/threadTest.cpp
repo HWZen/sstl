@@ -135,6 +135,10 @@ TEST(threadClassTest, init)
         ++i;
         }, 100);
     th4.join();
+    auto fun = [](int l, int r){
+        auto res = l + r;
+    };
+    sstd::thread th5(fun, 15, 32);
 }
 
 TEST(threadClassTest, detach)

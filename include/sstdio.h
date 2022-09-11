@@ -66,6 +66,8 @@ namespace sstd{
 
     inline const _Out& out = _Out::Out();
 
+
+    //TODO: Move time API to sstd_time.h
     inline auto get_time(){
         return fast_io::posix_clock_gettime(fast_io::posix_clock_id::realtime);
     }

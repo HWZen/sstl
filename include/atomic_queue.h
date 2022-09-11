@@ -15,6 +15,7 @@
 #include "functional.h"
 
 namespace sstd{
+    //TODO: Consider replacing the container
     template<typename T>
     class atomic_queue{
     public:

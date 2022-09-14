@@ -80,7 +80,7 @@ TEST(threadCStyleTest, terminate)
 
 TEST(threadCStyleTest, getCpuNums)
 {
-    sstd::Println(__LINE__,":",__FUNCTION__,":",sstd::getCpuNums());
+    sstd::Println(__FILE__,":","getCpuNums: ",sstd::getCpuNums());
     EXPECT_EQ(sstd::getCpuNums(), sstd::getCpuNums());
 }
 

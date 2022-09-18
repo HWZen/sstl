@@ -180,6 +180,13 @@ namespace sstd{
         virtual constexpr threadStatus getStatus() const noexcept = 0;
 
         /**
+         * @brief Get the exception thrown by the thread
+         * @return exception
+         * @retval nullptr if thread is not excepted
+         */
+        virtual constexpr std::exception_ptr getException() const noexcept = 0;
+
+        /**
          * @brief get the thread fd
          * @return thread fd
          */
@@ -257,6 +264,13 @@ namespace sstd{
         constexpr threadStatus getStatus() const noexcept override;
 
         /**
+         * @brief Get the exception thrown by the thread
+         * @return exception
+         * @retval nullptr if thread is not excepted
+         */
+         constexpr std::exception_ptr getException() const noexcept override;
+
+        /**
          * @brief get the thread run result
          * @return thread run result, if Fn is void, return nothing
          */
@@ -283,6 +297,7 @@ namespace sstd{
 
         threadFd m_threadFd{nullThreadFd};
 
+        std::exception_ptr m_exception{nullptr};
 
         /**
          * @brief control thread running status
@@ -381,7 +396,6 @@ namespace sstd{
     }
 
 
-
     size_t getCpuNums() noexcept {
 #ifdef _WIN32
         SYSTEM_INFO sysInfomation;
@@ -465,7 +479,7 @@ namespace sstd{
                     m_status = threadStatus::FINISHED;
                 }
                 catch(std::exception&){
-                    //TODO: log exception
+                    m_exception = std::current_exception();
                     m_status = threadStatus::EXCEPTED;
                 }
                 catch (...) {
@@ -487,7 +501,7 @@ namespace sstd{
                     m_status = threadStatus::FINISHED;
                 }
                 catch(std::exception&){
-                    //TODO: log exception
+                    m_exception = std::current_exception();
                     m_status = threadStatus::EXCEPTED;
                 }
                 catch (...) {
@@ -556,8 +570,8 @@ namespace sstd{
     {
         if(!joinable() || m_status != threadStatus::RUNNING) [[unlikely]]
             return false;
-        sstd::terminate(m_threadFd);
         m_status = threadStatus::DESTROYED;
+        sstd::terminate(m_threadFd);
         m_threadFd = nullThreadFd;
         return true;
     }
@@ -581,6 +595,13 @@ namespace sstd{
         else {
             return m_status == threadStatus::FINISHED ? m_runResult : ref_ptr<Val<ReturnType>>();
         }
+    }
+
+    template<size_t stackSize, typename Fn, typename... Args>
+    requires(std::invocable<Fn, Args...>) &&
+    (std::is_void_v<std::invoke_result_t<Fn, Args...>> || std::is_nothrow_move_constructible_v<std::invoke_result_t<Fn, Args...>>)
+    constexpr std::exception_ptr thread<stackSize, Fn, Args ...>::getException() const noexcept {
+        return m_status == threadStatus::EXCEPTED ? m_exception : nullptr;
     }
 
     template<size_t stackSize, typename Fn, typename... Args>

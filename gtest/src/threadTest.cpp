@@ -172,6 +172,7 @@ TEST(threadClassTest, terminate)
     th1.terminate();
     sstd::ThisThread::sleep(50);
     EXPECT_EQ(sign, 1);
+    EXPECT_EQ(th1.getStatus(), sstd::threadStatus::DESTROYED);
 }
 #endif // DISABLE_THREAD_TERMINATION_TEST
 

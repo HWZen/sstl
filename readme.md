@@ -1,13 +1,19 @@
 # sstl: Specialized Standard Library
 
 ## Introduction
-sstl is a basic stl library.<br>
+sstl is a basic std library written in c++20.<br>
 This lib is not a full-fledged library. It only implements some useful functions and classes 
 which very huge and redundancy in stl.
 
-sstl chases small, simple and performance, So if you want multithreading support, 
-look for other libraries.<br>
-In general, sstl do not guarantee thread safety.
+sstl chases small, simple and performance.<br>
+sstl should only be used in general environments. So if you want multithreading support 
+, high compatibility high reliability or powerful functions, look for other libraries.<br>
+In general, sstl assumes you are running in the following environment:
+* amd64 architecture
+* Windows 10 or above / Linux
+* use host compiler
+
+Author does not guarantee that sstl will still work properly in special environments (such as embedded development, big endian cpu, stand-alone compiler)
 
 ## Requirements
 * c++ compiler which supports [c++20](https://en.cppreference.com/w/cpp/20)
@@ -31,19 +37,22 @@ In general, sstl do not guarantee thread safety.
 * sstd::print()
 * sstd::println()
 * sstd::out()
+* sstd::hash
 
 > IO lib ([io.h](include/sstdio.h)) power by [fast_io](https://gitee.com/qabeowjbtkwb/fast_io)
 
 ## features
 * header-only
 * easy to use
+* good code style
+* exhaustive comments
 * fast, simple and performance
 * no binary bloat
 * compatible with stl
 * write by c++20
 
 ## implements in future
-* sstd::hash
+
 
 ## platforms passed by gtest
 * Linux (ubuntu 20.04 for wsl) with gcc 13.0.0

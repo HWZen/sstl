@@ -2,6 +2,7 @@ project(benchmark)
 
 add_executable(qsortBenchmark qsortBenchmark.cpp)
 add_executable(listBenchMark listBenchMark.cpp)
+add_executable(hashBenchMark hashBenchMark.cpp)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     message(STATUS "Compiling with GCC")

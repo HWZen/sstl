@@ -46,6 +46,18 @@ namespace sstd{
         sstd::Println(args...);
     }
 
+    // print immediate, no buffer
+    CONSTEXPR void Pout() {}
+
+    CONSTEXPR void Pout(auto &&val, auto &&... args){
+        if constexpr (std::is_same_v<std::remove_reference_t<decltype((val))>, const char *>){
+            ::print(fast_io::out(),fast_io::mnp::os_c_str(val));
+        }
+        else
+            ::print(fast_io::out(), std::forward<decltype(val)>(val));
+        sstd::Pout(args...);
+    }
+
     class _Out{
         _Out(){}
         _Out(const _Out&) = delete;

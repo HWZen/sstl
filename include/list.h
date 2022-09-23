@@ -19,6 +19,10 @@ template <typename T>
 class list{
 public:
     using value_type = T;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using size_type = size_t;
+
     using pVal = value_type*;
     using refVal = value_type&;
 
@@ -176,6 +180,18 @@ public:
 
     constexpr void pop(same_or_subclass<list<T>::const_iterator> auto &&it);
 
+    constexpr void emplace_back(auto &&...args){
+        push_back(value_type(std::forward<decltype(args)>(args)...));
+    }
+
+    constexpr void pop_front(){
+        pop(begin());
+    }
+
+    constexpr void pop_back(){
+        pop(--end());
+    }
+
     constexpr refVal front(){
         return m_head->data.value();
     }
@@ -198,6 +214,10 @@ public:
 
     constexpr size_t size() const{
         return m_size;
+    }
+
+    constexpr bool empty() const{
+        return m_size == 0;
     }
 
 private:

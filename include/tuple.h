@@ -9,12 +9,17 @@
 #include <type_traits>
 
 namespace sstd{
+#pragma pack(1)
     template<typename ThisType, typename ...OtherTypes>
     struct tuple{
         ThisType data;
         tuple<OtherTypes...> otherTypes;
 
         explicit tuple(ThisType thisType, OtherTypes... otherTypes): data(ThisType(thisType)), otherTypes(otherTypes...){}
+
+        bool operator==(const tuple<ThisType, OtherTypes...> &other) const{
+            return data == other.data && otherTypes == other.otherTypes;
+        }
 
         void destroy(){
             ~tuple();
@@ -30,7 +35,12 @@ namespace sstd{
     struct tuple<Ty>{
         Ty data;
         explicit tuple(Ty thisType): data(thisType) {}
+        bool operator==(const tuple<Ty> &other) const{
+            return data == other.data;
+        }
     };
+
+#pragma pack()
 
     auto& getTop(auto &&tp){
         return tp.data;
@@ -43,7 +53,6 @@ namespace sstd{
         else
             return getTop(std::forward<decltype(tp)>(tp));
     }
-
 
 }
 

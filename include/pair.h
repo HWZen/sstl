@@ -9,15 +9,21 @@
 
 namespace sstd {
 
+#pragma pack(1)
     template<typename T1, typename T2>
     class pair {
     public:
         using first_type = T1;
         using second_type = T2;
 
-        T1 first;
-        T2 second;
+        bool operator==(const pair<T1, T2> &other) const {
+            return first == other.first && second == other.second;
+        }
+
+        first_type first;
+        second_type second;
     };
+#pragma pack()
 }
 
 

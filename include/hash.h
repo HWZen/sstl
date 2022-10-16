@@ -82,6 +82,27 @@ namespace sstd {
         constexpr size_t operator()(const Ty &data) const noexcept;
     };
 
+    template<>
+    struct hash<float> {
+        constexpr size_t operator()(const float &data) const noexcept;
+    };
+
+    template<>
+    struct hash<double> {
+        constexpr size_t operator()(const double &data) const noexcept;
+    };
+
+    template<>
+    struct hash<long double>{
+        size_t operator()(const long double &data) const noexcept;
+    };
+
+    template<>
+    struct hash<std::string, 0> {
+        constexpr size_t operator()(const std::string &str) const noexcept;
+    };
+
+
     using hash_int = hash<int>;
     using hash_uint = hash<unsigned int>;
     using hash_long = hash<long>;
@@ -101,11 +122,6 @@ namespace sstd {
     using hash_size = hash<size_t>;
     using hash_ptr = hash<void *>;
     using hash_cptr = hash<const void *>;
-
-    template<>
-    struct hash<std::string, 0> {
-        constexpr size_t operator()(const std::string &str) const noexcept;
-    };
 
     using hash_string = hash<std::string, 0>;
 
@@ -322,14 +338,8 @@ namespace sstd {
 
     template<typename Ty, size_t TypeSize>
     constexpr size_t hash<Ty, TypeSize>::operator()(const Ty &data) const noexcept {
-        if constexpr (std::is_arithmetic_v<Ty>) {
-            if constexpr (sizeof(Ty) == sizeof(size_t))
-                return std::bit_cast<size_t>(data);
-            else if constexpr (std::is_same_v<Ty, float>)
-                return static_cast<size_t>(std::bit_cast<uint32_t>(data));
-            else
+        if constexpr (std::is_arithmetic_v<Ty>)
                 return static_cast<size_t>(data);
-        }
 
         if constexpr (std::is_array_v<Ty> && sizeof(std::remove_all_extents_t<Ty>) == 1){
 #ifdef _MSC_VER
@@ -340,7 +350,7 @@ namespace sstd {
         }
             // The following branches cannot be evaluated at compile time
         else {
-            if (TypeSize <= sizeof(size_t))
+            if constexpr (TypeSize <= sizeof(size_t))
             {
                 size_t res{0};
                 memcpy(&res, &data, sizeof(data));
@@ -362,6 +372,22 @@ namespace sstd {
         return FNVHash(str.data(), str.size());
 #elif defined(__GNUC__)
         return MurMurHash(str.data(), str.size());
+#endif
+    }
+
+    constexpr size_t hash<float>::operator()(const float &data) const noexcept {
+        return std::bit_cast<size_t>((double)data);
+    }
+
+    constexpr size_t hash<double>::operator()(const double &data) const noexcept {
+        return std::bit_cast<size_t>(data);
+    }
+
+    size_t hash<long double>::operator()(const long double &data) const noexcept {
+#ifdef __GNUC__
+        return MurMurHash((const byte*)&data, sizeof(data));
+#else
+        return stdHash(&data, sizeof(data));
 #endif
     }
 }

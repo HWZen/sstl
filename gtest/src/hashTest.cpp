@@ -169,7 +169,7 @@ TEST(hashTypeTest, constexprTest)
         return hashFloat(f);
     }();
     float f{3.1415926f};
-    EXPECT_TRUE(memcmp(&hashCode5, &f, sizeof(float)) == 0);
+    EXPECT_EQ(std::bit_cast<double>(hashCode5), (double )f);
 
 }
 

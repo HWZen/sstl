@@ -41,7 +41,7 @@ TEST(arrayInit, move) {
     array<int, 1024> b(std::move(a));
     EXPECT_EQ(b[0], 1);
     EXPECT_EQ(b[4], 5);
-    EXPECT_EQ(a.begin().operator->(), nullptr);
+    EXPECT_EQ(a.begin(), nullptr);
 }
 
 TEST(arrayInit, moveItself) {
@@ -92,7 +92,7 @@ TEST(arrayFunction, operatorTo) {// operator->
     EXPECT_EQ(it->a, 10);
     auto cit = a.cbegin();
     EXPECT_EQ(cit->a, 10);
-    auto res = std::is_same_v<decltype(cit.operator->()), S const *>;
+    auto res = std::is_same_v<decltype(cit), S const *>;
     EXPECT_TRUE(res);
 }
 
@@ -259,7 +259,7 @@ TEST(arrayComprehensive_test, test1){
     EXPECT_EQ(a[4], 5);
     a[5] = 100;
     EXPECT_EQ(a[5], 100);
-    *--a.end() = 200;
+    *(a.end() - 1) = 200;
     EXPECT_EQ(a.back(), 200);
 }
 

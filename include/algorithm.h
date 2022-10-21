@@ -7,7 +7,7 @@
 #ifndef SSTL_ALGORITHM_H
 #define SSTL_ALGORITHM_H
 
-#include <functional.h>
+#include "functional.h"
 #include <semaphore>
 #include "thread.h"
 #include <functional>

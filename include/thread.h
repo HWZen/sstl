@@ -366,6 +366,7 @@ namespace sstd{
 #endif // _WIN32
     }
 
+    // TODO: try lambda
     template<typename _Fn, typename... _Args>
     threadFd createNativeFd( size_t stackSize, _Fn &&fn, _Args &&...args) noexcept {
         auto tp = new sstd::tuple(std::forward<_Fn>(fn), std::forward<_Args>(args)...);

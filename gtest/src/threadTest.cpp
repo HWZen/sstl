@@ -4,8 +4,8 @@
 // MIT License
 //
 #include <gtest/gtest.h>
-#include "thread.h"
-#include "sstdio.h"
+#include "sstl/thread.h"
+#include "sstl/sstdio.h"
 
 static void foo1() noexcept{
 }

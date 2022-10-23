@@ -4,17 +4,17 @@
 
 #ifndef SSTL_SSTL_H
 #define SSTL_SSTL_H
-#include "algorithm.h"
-#include "array.h"
-#include "atomic_queue.h"
-#include "functional.h"
-#include "hash.h"
-#include "list.h"
-#include "pair.h"
-#include "ref_ptr.h"
-#include "RefBase.h"
-#include "sstdio.h"
-#include "thread.h"
-#include "tuple.h"
+#include "sstl/algorithm.h"
+#include "sstl/array.h"
+#include "sstl/atomic_queue.h"
+#include "sstl/functional.h"
+#include "sstl/hash.h"
+#include "sstl/list.h"
+#include "sstl/pair.h"
+#include "sstl/ref_ptr.h"
+#include "sstl/RefBase.h"
+#include "sstl/sstdio.h"
+#include "sstl/thread.h"
+#include "sstl/tuple.h"
 
 #endif //SSTL_SSTL_H

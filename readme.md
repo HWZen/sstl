@@ -39,7 +39,7 @@ Author does not guarantee that sstl will still work properly in special environm
 * sstd::out()
 * sstd::hash
 
-> IO lib ([io.h](include/sstdio.h)) power by [fast_io](https://gitee.com/qabeowjbtkwb/fast_io)
+> IO lib ([io.h](include/sstl/sstdio.h)) power by [fast_io](https://gitee.com/qabeowjbtkwb/fast_io)
 
 ## features
 * header-only

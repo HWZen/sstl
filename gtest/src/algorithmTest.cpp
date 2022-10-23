@@ -5,8 +5,8 @@
 //
 
 #include <gtest/gtest.h>
-#include "algorithm.h"
-#include "array.h"
+#include "sstl/algorithm.h"
+#include "sstl/array.h"
 #include "array"
 #include "vector"
 

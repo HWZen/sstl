@@ -4,8 +4,8 @@
 // MIT License
 //
 
-#include <atomic_queue.h>
-#include <sstdio.h>
+#include "sstl/atomic_queue.h"
+#include "sstl/sstdio.h"
 #include <random>
 #include <thread>
 

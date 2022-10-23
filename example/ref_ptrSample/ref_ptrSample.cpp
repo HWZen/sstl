@@ -4,8 +4,8 @@
 // MIT License
 //
 
-#include "ref_ptr.h"
-#include "sstdio.h"
+#include "sstl/ref_ptr.h"
+#include "sstl/sstdio.h"
 #include <string>
 
 class Base {

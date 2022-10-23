@@ -4,7 +4,7 @@
 // MIT License
 //
 
-#include "pair.h"
+#include "sstl/pair.h"
 #include <gtest/gtest.h>
 
 TEST(pairTest, initWithoutArg) {

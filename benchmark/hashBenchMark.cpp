@@ -1,8 +1,8 @@
 //
 // Created by HWZ on 2022/9/13.
 //
-#include "sstdio.h"
-#include "hash.h"
+#include "sstl/sstdio.h"
+#include "sstl/hash.h"
 
 int main(){
     size_t hashCode{ 0};

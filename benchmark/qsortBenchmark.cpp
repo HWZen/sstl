@@ -4,14 +4,14 @@
 // MIT License
 //
 
-#include <algorithm.h>
+#include "sstl/algorithm.h"
 #include <algorithm>
-#include <array.h>
-#include <sstdio.h>
+#include "sstl/array.h"
+#include "sstl/sstdio.h"
 
 #include <vector>
 
-const size_t array_size = 100000000;
+const size_t array_size = 100'000'000;
 
 int main()
 {
@@ -32,9 +32,7 @@ int main()
     sstd::Println("sstd::parallel_qsort(array) time: ", sstd::get_time() - t0);
 
     t0 = sstd::get_time();
-    std::vector<int> v(array_size);
-    for(size_t i{}; i < a2.size(); ++i)
-        v[i] = a2[i];
+    std::vector<int> v(a2.begin(), a2.end());
     sstd::Println("sstd::array copy to std::vector time: ", sstd::get_time() - t0);
 
     t0 = sstd::get_time();
@@ -48,7 +46,7 @@ int main()
     //check v == a
     t0 = sstd::get_time();
     for(size_t i{}; i < a.size(); ++i)
-        if(v[i] != a[i])
+        if(v[i] != a[i]) [[unlikely]]
         {
             sstd::Println("error");
             break;
@@ -58,15 +56,19 @@ int main()
     //check v2 == a2
     t0 = sstd::get_time();
     for(size_t i{}; i < a2.size(); ++i)
-        if(v2[i] != a2[i])
+        if(v2[i] != a2[i]) [[unlikely]]
         {
             sstd::Println("error");
             break;
         }
 
-    //t0 = sstd::get_time();
-    //sstd::parallel_qsort(v2);
-    //sstd::Println("sstd::parallel_qsort(vector) time: ", sstd::get_time() - t0);
+    t0 = sstd::get_time();
+    sstd::parallel_qsort(v2);
+    sstd::Println("sstd::parallel_qsort(vector) time: ", sstd::get_time() - t0);
+
+    t0 = sstd::get_time();
+    std::sort(a2.begin(), a2.end());
+    sstd::Println("std::sort(array) time: ", sstd::get_time() - t0);
 
 }
 

@@ -5,7 +5,7 @@
 //
 
 #include <gtest/gtest.h>
-#include <atomic_queue.h>
+#include "sstl/atomic_queue.h"
 
 TEST(queueInit, initWithoutArgs){
     sstd::atomic_queue<int> q;

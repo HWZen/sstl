@@ -5,7 +5,7 @@
 //
 
 #include <gtest/gtest.h>
-#include <array.h>
+#include "sstl/array.h"
 
 #include<array>
 

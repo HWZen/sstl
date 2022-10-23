@@ -16,7 +16,7 @@
 #include <utility>
 #include <type_traits>
 
-#include "fast_io/include/fast_io.h"
+#include "../fast_io/include/fast_io.h"
 
 #define CONSTEXPR inline constexpr
 

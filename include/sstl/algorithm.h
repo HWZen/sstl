@@ -81,10 +81,10 @@ namespace sstd{
                     }
                 };
 
-                using ThreadType = decltype(sstd::thread(std::move(loopTask)));
+                using ThreadType = decltype(sstd::thread(loopTask));
                 m_ths = new BaseThread*[m_threadNums];
                 for (size_t i = 0; i < m_threadNums; ++i) {
-                    m_ths[i] = new ThreadType(std::move(loopTask));
+                    m_ths[i] = new ThreadType(loopTask);
                 }
             }
 
@@ -109,14 +109,20 @@ namespace sstd{
 
         parallel_qsort_thread_poll threadPoll(sstd::getCpuNums());
 
-        std::counting_semaphore cnt{0};
+
+        std::atomic_size_t cnt = last - first;
+        std::binary_semaphore stopSignal{0};
+
         std::function<void(Ty,Ty)> core = [&](Ty first, Ty last){
-            if(last < first)
+            if(last < first) [[unlikely]]
                 throw std::runtime_error("parallel_qsort: first > last");
 
-            if(last - first <= 1){
-                if(last - first == 1)
-                    cnt.release();
+            if(last - first <= 1) {
+                if(last - first == 1){
+                    --cnt;
+                    if (cnt == 0)
+                        stopSignal.release();
+                }
                 return;
             }
 
@@ -124,8 +130,11 @@ namespace sstd{
             // if range is small, use traditional qsort
             if(last - first < 50000){
                 sstd::qsort(first, last, comp);
-                for(size_t i{}; i < last - first; ++i)
-                    cnt.release();
+                for(size_t i{}; i < last - first; ++i){
+                    --cnt;
+                    if (cnt == 0)
+                        stopSignal.release();
+                }
                 return;
             }
 
@@ -133,7 +142,7 @@ namespace sstd{
             auto left = first;
             auto right = last - 1;
 
-            while(left < right){
+            while(left < right)[[likely]]{
                 while(left < right && !comp(*right, mid))
                     --right;
                 *left = *right;
@@ -143,7 +152,9 @@ namespace sstd{
             }
             *left = mid;
 
-            cnt.release();
+            --cnt;
+            if(cnt == 0)
+                stopSignal.release();
 
             if(first < left)
                 threadPoll.m_taskQueue.push(sstd::pair{first, left});
@@ -156,15 +167,14 @@ namespace sstd{
         threadPoll.setTask(core);
 
         threadPoll.m_taskQueue.push(sstd::pair{first, last});
-        for(size_t i{}; i < last - first; ++i)
-            cnt.acquire();
+        stopSignal.acquire();
         threadPoll.m_stopSignal = true;
     }
 
 
     template<sortable Ty>
     void parallel_qsort(Ty first, Ty last){
-        parallel_qsort(first, last, [](auto &&left, auto &&right) {
+        parallel_qsort(first, last, [](auto &&left, auto &&right) noexcept {
             return left < right;
         });
     }

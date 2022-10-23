@@ -1,7 +1,7 @@
 //
 // Created by HWZ on 2022/9/7.
 //
-#include "hash.h"
+#include "sstl/hash.h"
 #include <array>
 #include <gtest/gtest.h>
 #include <variant>

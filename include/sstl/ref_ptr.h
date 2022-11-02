@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <cstddef>
 #include "functional.h"
-
+#include <functional>
 namespace sstd {
 
 
@@ -23,28 +23,43 @@ namespace sstd {
         template<class other>
         friend class ref_ptr;
 
-        constexpr ref_ptr():m_refCount(new size_t(1)), m_ptr(new value_type) {}
+        constexpr ref_ptr():m_refCount(new size_t(1)), m_ptr(nullptr) {}
 
         constexpr ref_ptr(const pVal ptr) : m_refCount(new size_t(1)), m_ptr(ptr) {}
+
+        template<same_or_subclass<value_type> Ty>
+        constexpr ref_ptr( Ty * const ptr) : m_refCount(new size_t(1)), m_ptr(ptr) {}
 
         template<same_or_subclass<value_type> Ty>
         constexpr ref_ptr(ref_ptr<Ty>&& other) noexcept : ref_ptr() {
             swap(other);
         }
 
-        constexpr ref_ptr(const ref_ptr& other) : m_refCount(other.m_refCount), m_ptr(other.m_ptr) {
+        constexpr ref_ptr(const ref_ptr& other) : m_refCount(other.m_refCount), m_ptr(other.m_ptr), m_deleter(other.m_deleter) {
             ++(*m_refCount);
         }
 
         template<same_or_subclass<value_type> Ty>
-        constexpr ref_ptr(const ref_ptr<Ty>& other) : m_ptr(other.m_ptr) , m_refCount(other.m_refCount) {
+        constexpr ref_ptr(const ref_ptr<Ty>& other) : m_ptr(other.m_ptr) , m_refCount(other.m_refCount), m_deleter(other.m_deleter) {
             ++(*m_refCount);
         }
+
+        template<typename Fn>
+        constexpr explicit ref_ptr(const pVal ptr, Fn &&deleter) : ref_ptr(ptr){
+            m_deleter = std::forward<Fn>(deleter);
+        }
+
+        template<same_or_subclass<value_type> Ty, typename Fn>
+        constexpr explicit ref_ptr(Ty * const  ptr, Fn &&deleter) : ref_ptr(ptr){
+            m_deleter = std::forward<Fn>(deleter);
+        }
+
+
 
         ~ref_ptr() {
             if (--(*m_refCount) == 0) {
                 delete m_refCount;
-                delete m_ptr;
+                m_deleter(m_ptr);
             }
         }
 
@@ -55,6 +70,8 @@ namespace sstd {
         constexpr void swap(ref_ptr<Ty>& other) noexcept {
             std::swap(m_refCount, other.m_refCount);
             std::swap(m_ptr,  reinterpret_cast<pVal&>(other.m_ptr));
+            if constexpr (std::is_same_v<value_type, Ty>)
+                std::swap(m_deleter, other.m_deleter);
         }
 
         template<same_or_subclass<value_type> Ty>
@@ -91,17 +108,18 @@ namespace sstd {
         private:
         pVal m_ptr;
         size_t *m_refCount;
+        std::function<void(pVal)> m_deleter = [](pVal ptr) { delete ptr; };
     };
 
     template<typename T>
     constexpr ref_ptr<T>& ref_ptr<T>::operator=(const ref_ptr& other) {
-        if (*this == other) {
+        if (*this == other) [[unlikely]] {
             return *this;
         }
         --(*m_refCount);
         if (*m_refCount == 0) {
             delete m_refCount;
-            delete m_ptr;
+            m_deleter(m_ptr);
         }
 
         m_ptr = other.m_ptr;
@@ -113,13 +131,13 @@ namespace sstd {
     template<typename T>
     template<same_or_subclass<typename ref_ptr<T>::value_type> Ty>
     constexpr ref_ptr<T> &ref_ptr<T>::operator=(const ref_ptr<Ty> &other) {
-        if (*this == other) {
+        if (*this == other) [[unlikely]]{
             return *this;
         }
         --(*m_refCount);
         if (*m_refCount == 0) {
             delete m_refCount;
-            delete m_ptr;
+            m_deleter(m_ptr);
         }
 
         m_ptr = static_cast<pVal>(other.m_ptr);

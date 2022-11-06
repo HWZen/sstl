@@ -291,7 +291,7 @@ namespace sstd{
     protected:
         constexpr void startThread(Fn fn, Args &&...args) noexcept;
 
-        ref_ptr<Val<ReturnType>> m_runResult{};
+        ref_ptr<Val<ReturnType>> m_runResult{new Val<ReturnType>};
 
         threadStatus m_status{threadStatus::UNSTART};
 

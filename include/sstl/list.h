@@ -264,7 +264,7 @@ private:
     template<typename T>
     template<ValueType<T> Type>
     constexpr void list<T>::push(Type &&val, const const_iterator &it) {
-        if(this != it.listObj){
+        if(this != it.listObj) [[unlikely]]{
             // TODO: had better do compile-time check
             return;
         }

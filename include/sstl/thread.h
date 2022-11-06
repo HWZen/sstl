@@ -355,7 +355,7 @@ namespace sstd{
     }
 
     void terminate(threadFd fd) ONLY_WIN_NO_EXCEPT {
-        if (isNullFd(fd))
+        if (isNullFd(fd)) [[unlikely]]
             return;
 #ifdef _WIN32
         TerminateThread(fd, 0);

@@ -33,7 +33,7 @@ int main() {
                         q.try_back();
                         break;
                     default:
-                        sstd::Println("unknown num: ", num % 3);
+                        sstd::Println("unknown num: ", num % 4);
                         exit(1);
                 }
             }

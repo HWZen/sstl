@@ -40,7 +40,7 @@ namespace sstd {
         }
 
         template<same_or_subclass<value_type> Ty>
-        constexpr ref_ptr(const ref_ptr<Ty>& other) : m_ptr(other.m_ptr) , m_refCount(other.m_refCount), m_deleter(other.m_deleter) {
+        constexpr ref_ptr(const ref_ptr<Ty>& other) : m_ptr(other.m_ptr) , m_refCount(other.m_refCount) {
             ++(*m_refCount);
         }
 

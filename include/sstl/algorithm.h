@@ -62,7 +62,7 @@ namespace sstd{
 
         class parallel_qsort_thread_poll{
         private:
-            sstd::BaseThread **m_ths;
+            std::vector<sstd::any_thread> m_ths;
             size_t m_threadNums;
             std::function<void(Ty,Ty)> m_task;
 
@@ -82,16 +82,16 @@ namespace sstd{
                 };
 
                 using ThreadType = decltype(sstd::thread(loopTask));
-                m_ths = new BaseThread*[m_threadNums];
+                m_ths.reserve(m_threadNums);
                 for (size_t i = 0; i < m_threadNums; ++i) {
-                    m_ths[i] = new ThreadType(loopTask);
+                    m_ths.emplace_back(ThreadType(loopTask));
                 }
             }
 
             void stop(){
                 for(size_t i{}; i < m_threadNums; ++i){
-                    if(m_ths[i]->joinable())
-                        m_ths[i]->join();
+                    if(m_ths[i].joinable())
+                        m_ths[i].join();
                 }
             }
 
@@ -101,9 +101,6 @@ namespace sstd{
 
             ~parallel_qsort_thread_poll(){
                 stop();
-                for(size_t i{}; i < m_threadNums; ++i)
-                    delete m_ths[i];
-                delete[] m_ths;
             }
         };
 

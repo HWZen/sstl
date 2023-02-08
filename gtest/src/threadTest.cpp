@@ -245,4 +245,15 @@ TEST(threadClassTest, getResult)
 
 }
 
+TEST(any_threadTest, test1)
+{
+    std::vector<sstd::any_thread> threads;
+    threads.emplace_back(sstd::thread(foo1));
+    threads.emplace_back(sstd::thread(foo2, 10));
+    threads.emplace_back(sstd::thread(foo3, 4, 5));
+    threads.emplace_back(sstd::thread([](){}));
+    for (auto &thread:threads)
+        thread.join();
+}
+
 

@@ -15,6 +15,8 @@
 #include "tuple.h"
 #include "functional.h"
 #include <functional>
+#include <any>
+#include <memory>
 #ifdef _WIN32
 
 #include <Windows.h>
@@ -146,54 +148,10 @@ namespace sstd{
         using ReturnType = void;
     };
 
-    class BaseThread
-    {
-    public:
-        /**
-         * @brief detach thread is joinablenable
-         * @return true if thread is joinable
-         */
-        virtual constexpr bool joinable() noexcept = 0;
 
-        /**
-         * @brief join thread
-         * @return true if thread is joinable
-         */
-        virtual constexpr bool join() noexcept = 0;
-
-        /**
-         * @brief detach thread
-         * @return true if thread is joinable
-         */
-        virtual constexpr bool detach() noexcept = 0;
-
-        /**
-         * @brief terminate the thread
-         * @return true if thread is running
-         */
-        virtual constexpr bool terminate() ONLY_WIN_NO_EXCEPT = 0;
-
-        /**
-         * @brief get the thread status
-         * @return thread status
-         */
-        virtual constexpr threadStatus getStatus() const noexcept = 0;
-
-        /**
-         * @brief Get the exception thrown by the thread
-         * @return exception
-         * @retval nullptr if thread is not excepted
-         */
-        virtual constexpr std::exception_ptr getException() const noexcept = 0;
-
-        /**
-         * @brief get the thread fd
-         * @return thread fd
-         */
-        virtual threadFd getRawFd() noexcept = 0;
-
-        virtual ~BaseThread() = default;
-    };
+    class ThreadToken{};
+    template<typename T>
+    concept Thread = std::is_base_of_v<ThreadToken, T>;
 
 
 
@@ -206,7 +164,7 @@ namespace sstd{
     template<size_t stackSize = g_stackSize, typename Fn = void(*)(), typename... Args>
         requires(std::invocable<Fn, Args...>) &&
         (std::is_void_v<std::invoke_result_t<Fn, Args...>> || std::is_nothrow_move_constructible_v<std::invoke_result_t<Fn, Args...>>)
-    class thread : public BaseThread
+    class thread : public ThreadToken
     {
     public:
 
@@ -229,7 +187,7 @@ namespace sstd{
             return *this;
         }
 
-        ~thread() override;
+        ~thread();
 
         constexpr thread(Fn fn, Args &&...args) noexcept;
 
@@ -237,38 +195,38 @@ namespace sstd{
          * @brief detach thread is joinablenable
          * @return true if thread is joinable
          */
-        constexpr bool joinable() noexcept override;
+        constexpr bool joinable() noexcept;
 
         /**
          * @brief join thread
          * @return true if thread is joinable
          */
-        constexpr bool join() noexcept override;
+        constexpr bool join() noexcept;
 
         /**
          * @brief detach thread
          * @return true if thread is joinable
          */
-        constexpr bool detach() noexcept override;
+        constexpr bool detach() noexcept;
 
         /**
          * @brief terminate the thread
          * @return true if thread is running
          */
-        constexpr bool terminate() ONLY_WIN_NO_EXCEPT override;
+        constexpr bool terminate() ONLY_WIN_NO_EXCEPT;
 
         /**
          * @brief get the thread status
          * @return thread status
          */
-        constexpr threadStatus getStatus() const noexcept override;
+        constexpr threadStatus getStatus() const noexcept;
 
         /**
          * @brief Get the exception thrown by the thread
          * @return exception
          * @retval nullptr if thread is not excepted
          */
-         constexpr std::exception_ptr getException() const noexcept override;
+         constexpr std::exception_ptr getException() const noexcept;
 
         /**
          * @brief get the thread run result
@@ -286,7 +244,7 @@ namespace sstd{
          * @brief get the thread fd
          * @return thread fd
          */
-        threadFd getRawFd() noexcept override;
+        threadFd getRawFd() noexcept;
 
     protected:
         constexpr void startThread(Fn fn, Args &&...args) noexcept;
@@ -322,11 +280,53 @@ namespace sstd{
          static auto getInvokeFnInThread(Ty&&, std::index_sequence<Index...>) noexcept;
     };
 
+    class any_thread{
+        std::any Object{};
+    public:
+        using joinableFuncType = auto(std::any&)->bool;
+        joinableFuncType* joinableFunc{ nullptr};
 
+        using joinFuncType = auto(std::any&)->bool;
+        joinFuncType* joinFunc{nullptr};
+
+        using detachFuncType = auto(std::any&)->bool;
+        detachFuncType* detachFunc{nullptr};
+
+        using terminateFuncType = auto(std::any&)->bool;
+        detachFuncType* terminateFunc{nullptr};
+
+        using getStatusFuncType = auto(std::any&)->threadStatus;
+        getStatusFuncType* getStatusFunc{nullptr};
+
+        using getExceptionFuncType = auto(std::any&)->std::exception_ptr;
+        getExceptionFuncType* getExceptionFunc{nullptr};
+
+        any_thread() = delete;
+        any_thread(Thread auto &&th);
+
+        bool joinable() noexcept {
+            return joinableFunc(Object);
+        }
+        bool join() noexcept {
+            return joinFunc(Object);
+        }
+        bool detach() noexcept {
+            return detachFunc(Object);
+        }
+        bool terminate() ONLY_WIN_NO_EXCEPT {
+            return terminateFunc(Object);
+        }
+        threadStatus getStatus() noexcept {
+            return getStatusFunc(Object);
+        }
+        std::exception_ptr getException() noexcept {
+            return getExceptionFunc(Object);
+        }
+    };
 
 
     /*************************
-     * define
+     * implement
      ************************/
 
     bool isNullFd(threadFd fd) noexcept {
@@ -634,6 +634,37 @@ namespace sstd{
 
     template<typename Fn, typename... Args>
     thread(Fn, Args...) -> thread<g_stackSize, Fn, Args...>;
+
+    any_thread::any_thread(Thread auto &&th)
+    {
+        using ObjectType = std::decay_t<decltype(th)>;
+        using SharedType = std::shared_ptr<ObjectType>;
+        this->Object = std::make_shared<ObjectType>(std::forward<decltype(th)>(th));
+        this->joinableFunc = [](auto& Object){
+            auto &x = *std::any_cast<SharedType&>(Object);
+            return x.joinable();
+        };
+        this->joinFunc = [](auto& Object){
+            auto &x = *std::any_cast<SharedType&>(Object);
+            return x.join();
+        };
+        this->detachFunc = [](auto& Object){
+            auto &x = *std::any_cast<SharedType&>(Object);
+            return x.detach();
+        };
+        this->terminateFunc = [](auto& Object){
+            auto &x = *std::any_cast<SharedType&>(Object);
+            return x.terminate();
+        };
+        this->getStatusFunc = [](auto& Object){
+            auto &x = *std::any_cast<SharedType>(Object);
+            return x.getStatus();
+        };
+        this->getExceptionFunc = [](auto& Object){
+            auto &x = *std::any_cast<SharedType&>(Object);
+            return x.getException();
+        };
+    }
 }
 
 #endif //SSTL_THREAD_H
